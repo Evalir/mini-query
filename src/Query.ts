@@ -28,19 +28,21 @@ export type Action<TData, TError> =
 
 export type QueryFunction<TData> = () => TData | Promise<TData>
 
+const INITIAL_QUERY_STATE = {
+  data: undefined,
+  error: null,
+  status: "idle",
+}
+
 export class Query<TData, TError> {
-  private state: QueryState<TData, TError>
+  state: QueryState<TData, TError>
   private observers: QueryObserver[]
   private queryFn: QueryFunction<TData>
   private retrier?: Retrier<TData, TError>
 
   constructor(queryFn: QueryFunction<TData>) {
     this.observers = []
-    this.state = {
-      data: undefined,
-      error: null,
-      status: "idle",
-    }
+    this.state = INITIAL_QUERY_STATE as QueryState<TData, TError>
     this.queryFn = queryFn
   }
 
@@ -51,6 +53,10 @@ export class Query<TData, TError> {
   }
 
   fetch(): void {
+    if (this.state.status === "loading") {
+      return
+    }
+
     this.dispatch({
       type: "fetch",
     })
@@ -70,10 +76,6 @@ export class Query<TData, TError> {
         })
       },
     })
-  }
-
-  refetch(): void {
-    this.fetch()
   }
 
   reducer(

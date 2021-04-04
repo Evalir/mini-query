@@ -1,12 +1,22 @@
-import { Query } from "./Query"
-
 import { QueryObserver } from "./QueryObserver"
 
-const fetchFn = (a = "a") => Promise.resolve({ json: a })
+const fetchFn = () =>
+  new Promise(function (resolve) {
+    setTimeout(resolve, 1000, "hello world!")
+  })
 
-const queryManager = new Query(fetchFn)
-const queryObserver = new QueryObserver()
+const fetchFnTwo = () =>
+  new Promise(function (_, reject) {
+    setTimeout(reject, 1000, new Error('Whoops'))
+  })
 
-queryManager.addObserver(queryObserver)
+const queryObserver = new QueryObserver(fetchFn, {
+  listeners: [(res) => console.log(res)],
+})
 
-queryManager.fetch()
+const queryObserverTwo = new QueryObserver(fetchFnTwo, {
+  listeners: [(res) => console.log(res)],
+})
+
+queryObserver.fetch()
+queryObserverTwo.fetch()
